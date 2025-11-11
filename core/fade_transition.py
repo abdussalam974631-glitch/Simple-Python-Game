@@ -2,7 +2,7 @@ import pygame
 import core.utils
 
 class FadeTransition:
-    def __init__(self, width, height, fade_speed=5):
+    def __init__(self, width, height, fade_speed=10):
         self.surface = pygame.Surface((width, height))
         self.surface.fill((0, 0, 0))
         self.alpha = 0

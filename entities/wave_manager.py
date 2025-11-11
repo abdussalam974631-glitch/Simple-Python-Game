@@ -1,63 +1,40 @@
 # entities/wave_manager.py
-import pygame
-from core.enemy_factory import EnemyFactory
+from core.utils import DEMO_WAVE
+from waves.demo_wave import Demo_Wave
+# from waves.wave_1 import Wave1
+# from waves.wave_2 import Wave2
+# from waves.wave_3 import Wave3
+# from waves.wave_4 import Wave4
 
 class WaveManager:
-    def __init__(self, game_scene):
-        self.scene = game_scene
-        self.enemy_factory = EnemyFactory()
-        self.current_wave = 1
-        self.wave_data = self.get_wave_data(self.current_wave)
-        self.spawn_delay = 1000
-        self.last_spawn_time = 0
-        self.spawn_progress = {etype: 0 for etype, _ in self.wave_data}
-        self.wave_active = True
-
-    def get_wave_data(self, wave_number):
-        if wave_number == 1:
-            return [("basic", 10)]
-        elif wave_number == 2:
-            return [("basic", 5), ("evasive", 5)]
-        elif wave_number == 3:
-            return [("evasive", 8), ("tank", 2)]
-        elif wave_number == 4:
-            return [("tank", 4), ("evasive", 6)]
+    def __init__(self, scene):
+        self.scene = scene
+        self.current_wave_number = 1
+        self.current_wave = None
+        if DEMO_WAVE: 
+            self.wave_classes = {1: Demo_Wave}
         else:
-            return [("basic", 3), ("evasive", 3), ("tank", 2)]
+            self.wave_classes = Demo_Wave.registry
+
+    def start_wave(self, wave_number):
+        """Initialize the given wave."""
+        if wave_number in self.wave_classes:
+            self.current_wave = self.wave_classes[wave_number](self.scene)
+            self.current_wave.setup()
+        else:
+            self.current_wave = None
+            self.end_game()
 
     def update(self, dt):
-        now = pygame.time.get_ticks()
-        if not self.wave_active:
-            return
-
-        # Spawn based on time
-        if now - self.last_spawn_time > self.spawn_delay:
-            self.spawn_next_enemy()
-            self.last_spawn_time = now
-
-        # Check wave completion
-        if not self.scene.enemies and self.total_spawned() >= self.total_to_spawn():
-            self.start_next_wave()
-
-    def spawn_next_enemy(self):
-        """Spawn enemies one at a time in sequence from the wave data."""
-        for enemy_type, count in self.wave_data:
-            if self.spawn_progress[enemy_type] < count:
-                enemy = self.enemy_factory.create_enemy(enemy_type)
-                self.scene.enemies.add(enemy)
-                self.scene.all_sprites.add(enemy)
-                self.spawn_progress[enemy_type] += 1
-                break  # spawn one per update cycle
-
-    def total_to_spawn(self):
-        return sum(count for _, count in self.wave_data)
-
-    def total_spawned(self):
-        return sum(self.spawn_progress.values())
-
-    def start_next_wave(self):
-        self.current_wave += 1
-        self.wave_data = self.get_wave_data(self.current_wave)
-        self.spawn_progress = {etype: 0 for etype, _ in self.wave_data}
-        self.wave_active = True
-        print(f"🌊 Starting wave {self.current_wave}")
+        if not self.current_wave: return
+        
+        self.current_wave.update(dt)
+        
+        if self.current_wave.is_finished():
+            self.current_wave_number += 1
+            self.start_wave(self.current_wave_number)
+    
+    def end_game(self):
+        self.scene.manager.fade.start_fade_out(
+            on_complete=lambda: self.scene.manager.change_scene("MenuScene")
+        )

@@ -1,28 +1,27 @@
 import pygame
-from core.SceneManager import SceneManager
-from scenes import GameState, MenuState
+from core.sound_manager import SoundManager
+from core.scenemanager import SceneManager
+from scenes import GameState, MenuState, HelpState
 from core.fade_transition import FadeTransition
 from core.utils import *
 import core.utils
 
 pygame.init()
-pygame.mixer.init()
+SoundManager.load_sounds()
 
-DISPLAY_WIDTH = 1000
-screen = pygame.display.set_mode((DISPLAY_WIDTH, 600))
+screen = pygame.display.set_mode((DISPLAY_WIDTH, DISPLAY_HEIGHT))
 pygame.display.set_caption("Simple Game")
-
-pygame.mixer.music.load("assets/music-background.mp3")
-pygame.mixer.music.play()
 
 clock = pygame.time.Clock()
 
-dt = clock.tick(60)    
+dt = clock.tick(60)
 fade = FadeTransition(1000, 600, 1)
 
 scene = SceneManager(fade)
-scene.register_scene( "MenuScene", MenuState.MenuScene)
+scene.register_scene("MenuScene", MenuState.MenuScene)
 scene.register_scene("GameScene", GameState.GameScene)
+scene.register_scene("HelpScene", HelpState.HelpScene)
+
 scene.change_scene("MenuScene")
 
 if core.utils.DEV_MODE: scene.change_scene("GameScene")
