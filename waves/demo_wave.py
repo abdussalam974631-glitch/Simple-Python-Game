@@ -1,20 +1,21 @@
-from .wave_base import Wave
+from ._wave_base import Wave
+from entities.enemies import *
 from random import randint
-from entities.enemies import Evasive
-from entities.powerup import PowerUpSprite
-from core.utils import HEALTH_IMG
-from entities.powers import ExtraLife
 
 class Demo_Wave(Wave):
     def setup(self):
         self.stages = [
-            (0, self.stage_1)
+            (0, self.stage_1),
+            (10000, self.stage_2)
         ]
 
     def stage_1(self):
-        positions = [(500, -100)]
+        positions = self.Fm.get_positions("line", 2)
         for pos in positions:
-            enemy = Evasive(pos[0], pos[1], self.scene)
+            enemy = Cloaker(pos[0], pos[1], self.scene)
             self.scene.enemies.add(enemy)
             self.scene.all_sprites.add(enemy)
             self.enemies.append(enemy)
+    
+    def stage_2(self):
+        pass
